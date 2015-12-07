@@ -1,0 +1,8 @@
+{
+	"@metadata": {
+		"authors": [
+			"Siebrand"
+		]
+	},
+	"randomimage-desc": "Voegt de tag <code>&lt;randomimage /&gt;</code> toe voor het selecteren van een willekeurig mediabestand"
+}

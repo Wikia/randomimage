@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Parser hook extension to add a <randomimage> tag
  *
@@ -9,7 +8,7 @@
  * @copyright © 2006 Rob Church
  * @licence GNU General Public Licence 2.0
  */
- 
+
 if( !defined( 'MEDIAWIKI' ) ) {
 	echo( "This file is an extension to the MediaWiki software and cannot be used standalone.\n" );
 	exit( 1 );
@@ -23,6 +22,8 @@ $wgExtensionCredits['parserhook'][] = array(
 	'url'            => 'https://www.mediawiki.org/wiki/Extension:RandomImage',
 	'descriptionmsg' => 'randomimage-desc',
 );
+
+$wgMessagesDirs['RandomImage'] = __DIR__ . '/i18n';
 $wgExtensionMessagesFiles['RandomImage'] = dirname(__FILE__) . '/RandomImage.i18n.php';
 $wgHooks['ParserAfterStrip'][] = 'RandomImage::stripHook';
 $wgHooks['ParserFirstCallInit'][] = 'efRandomImage';
@@ -47,4 +48,3 @@ function efRandomImage(&$parser) {
 	$parser->setHook( 'randomimage', 'RandomImage::renderHook' );
 	return true;
 }
-
