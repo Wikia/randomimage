@@ -6,17 +6,19 @@
  * @file
  * @ingroup Extensions
  * @author Rob Church <robchur@gmail.com>
+ * @copyright © 2006 Rob Church
+ * @licence GNU General Public Licence 2.0
  */
 class RandomImage {
 
 	private $parser = null;
-	
+
 	private $width = false;
 	private $float = false;
 	private $caption = '';
-	
+
 	private $choices = array();
-	
+
 	/**
 	 * Constructor
 	 *
@@ -29,31 +31,34 @@ class RandomImage {
 		$this->caption = $caption;
 		$this->setOptions( $options );
 	}
-	
+
 	/**
 	 * Extract applicable options from tag attributes
 	 *
 	 * @param array $options Tag attributes
 	 */
 	protected function setOptions( $options ) {
-		if( isset( $options['size'] ) ) {
+		if ( isset( $options['size'] ) ) {
 			$size = intval( $options['size'] );
-			if( $size > 0 )
-				$this->width = $size;			
+			if ( $size > 0 ) {
+				$this->width = $size;
+			}
 		}
-		if( isset( $options['float'] ) ) {
+		if ( isset( $options['float'] ) ) {
 			$float = strtolower( $options['float'] );
 			// TODO: Use magic words instead
-			if( in_array( $float, array( 'left', 'right', 'center' ) ) )
+			if ( in_array( $float, array( 'left', 'right', 'center' ) ) ) {
 				$this->float = $float;
+			}
 		}
-		if( isset( $options['choices'] ) ) {
+		if ( isset( $options['choices'] ) ) {
 			$choices = explode( '|', $options['choices'] );
-			if( count( $choices ) > 0 )
+			if ( count( $choices ) > 0 ) {
 				$this->choices = $choices;
+			}
 		}
 	}
-	
+
 	/**
 	 * Render a random image
 	 *
@@ -61,8 +66,8 @@ class RandomImage {
 	 */
 	public function render() {
 		$title = $this->pickImage();
-		if( $title instanceof Title && $this->imageExists( $title ) ) {
-			return $this->removeMagnifier( 
+		if ( $title instanceof Title && $this->imageExists( $title ) ) {
+			return $this->removeMagnifier(
 				$this->parser->recursiveTagParse(
 					$this->buildMarkup( $title )
 				)
@@ -70,7 +75,7 @@ class RandomImage {
 		}
 		return '';
 	}
-	
+
 	/**
 	 * Does the specified image exist?
 	 *
@@ -85,7 +90,7 @@ class RandomImage {
 		$file = wfFindFile( $title );
 		return is_object( $file ) && $file->exists();
 	}
-	
+
 	/**
 	 * Prepare image markup for the given image
 	 *
@@ -95,10 +100,12 @@ class RandomImage {
 	protected function buildMarkup( $title ) {
 		$parts[] = $title->getPrefixedText();
 		$parts[] = 'thumb';
-		if( $this->width !== false )
+		if ( $this->width !== false ) {
 			$parts[] = "{$this->width}px";
-		if( $this->float )
+		}
+		if ( $this->float ) {
 			$parts[] = $this->float;
+		}
 		$parts[] = $this->getCaption( $title );
 		return '[[' . implode( '|', $parts ) . ']]';
 	}
@@ -110,11 +117,12 @@ class RandomImage {
 	 * @return string
 	 */
 	protected function removeMagnifier( $html ) {
-		$doc = new DOMDocument();
-		$doc->loadHTML( $html );
+		$dom = new DOMDocument();
+		$doc = $dom->loadHTML( $html );
 		$xpath = new DOMXPath( $doc );
-		foreach( $xpath->query( '//div[@class="magnify"]' ) as $mag )
+		foreach ( $xpath->query( '//div[@class="magnify"]' ) as $mag ) {
 			$mag->parentNode->removeChild( $mag );
+		}
 		return preg_replace( '!<\?xml[^?]*\?>!', '', $doc->saveXml() );
 	}
 
@@ -125,18 +133,19 @@ class RandomImage {
 	 * @return string
 	 */
 	protected function getCaption( $title ) {
-		if( !$this->caption ) {
-			if( $title->exists() ) {
-				$text = Revision::newFromTitle( $title )->getText();
-				if( preg_match( '!<randomcaption>(.*?)</randomcaption>!i', $text, $matches ) ) {
+		if ( !$this->caption ) {
+			if ( $title->exists() ) {
+				$content = Revision::newFromTitle( $title )->getContent();
+				$text = ContentHandler::getContentText( $content );
+				if ( preg_match( '!<randomcaption>(.*?)</randomcaption>!i', $text, $matches ) ) {
 					$this->caption = $matches[1];
-				} elseif( preg_match( "!^(.*?)\n!i", $text, $matches ) ) {
+				} elseif ( preg_match( "!^(.*?)\n!i", $text, $matches ) ) {
 					$this->caption = $matches[1];
 				} else {
-					if($text) {
+					if ( $text ) {
 						$this->caption = $text;
 					} else {
-						$this->caption='&#32;';
+						$this->caption = '&#32;';
 					}
 				}
 			} else {
@@ -152,16 +161,17 @@ class RandomImage {
 	 * @return Title
 	 */
 	protected function pickImage() {
-		if( count( $this->choices ) > 0 ) {
+		if ( count( $this->choices ) > 0 ) {
 			return $this->pickFromChoices();
 		} else {
 			$pick = $this->pickFromDatabase();
-			if( !$pick instanceof Title )
+			if ( !$pick instanceof Title ) {
 				$pick = $this->pickFromDatabase();
+			}
 			return $pick;
 		}
 	}
-	
+
 	/**
 	 * Select a random image from the choices given
 	 *
@@ -169,18 +179,17 @@ class RandomImage {
 	 */
 	protected function pickFromChoices() {
 		$name = count( $this->choices ) > 1
-			? $this->choices[ array_rand( $this->choices ) ]
+			? $this->choices[array_rand( $this->choices )]
 			: $this->choices[0];
-		return Title::makeTitleSafe( NS_IMAGE, $name );
+		return Title::makeTitleSafe( NS_FILE, $name );
 	}
-	
+
 	/**
 	 * Select a random image from the database
 	 *
 	 * @return Title
 	 */
 	protected function pickFromDatabase() {
-		wfProfileIn( __METHOD__ );
 		$dbr = wfGetDB( DB_SLAVE );
 		list( $table, $conds, $opts ) = $this->getExtraSelectOptions( $dbr );
 		$res = $dbr->select(
@@ -190,7 +199,7 @@ class RandomImage {
 				'page_title',
 			),
 			array(
-				'page_namespace' => NS_IMAGE,
+				'page_namespace' => NS_FILE,
 				'page_is_redirect' => 0,
 				'page_random > ' . $dbr->addQuotes( wfRandom() ),
 			) + $conds,
@@ -200,15 +209,14 @@ class RandomImage {
 				'LIMIT' => 1,
 			) + $opts
 		);
-		wfProfileOut( __METHOD__ );
-		if( $dbr->numRows( $res ) > 0 ) {
+		if ( $dbr->numRows( $res ) > 0 ) {
 			$row = $dbr->fetchObject( $res );
 			$dbr->freeResult( $res );
 			return Title::makeTitleSafe( $row->page_namespace, $row->page_title );
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Get various options for database selection
 	 *
@@ -217,7 +225,7 @@ class RandomImage {
 	 */
 	protected function getExtraSelectOptions( $dbr ) {
 		global $wgRandomImageStrict;
-		if( $wgRandomImageStrict ) {
+		if ( $wgRandomImageStrict ) {
 			list( $image, $page ) = $dbr->tableNamesN( 'image', 'page' );
 			$ind = $dbr->useIndexClause( 'page_random' );
 			return array(
@@ -237,7 +245,31 @@ class RandomImage {
 			);
 		}
 	}
-	
+
+	/**
+	 * Extension registration callback which sets the default value for
+	 * the global variable introduced by this extension.
+	 */
+	public static function onRegistration() {
+		global $wgRandomImageStrict, $wgMiserMode;
+		/**
+		 * Set this to true to ensure that images selected from the database
+		 * have an "IMAGE" MIME type
+		 */
+		$wgRandomImageStrict = !$wgMiserMode;
+	}
+
+	/**
+	 * Hook setup
+	 *
+	 * @param Parser $parser
+	 * @return bool
+	 */
+	public static function onParserFirstCallInit( &$parser ) {
+		$parser->setHook( 'randomimage', 'RandomImage::renderHook' );
+		return true;
+	}
+
 	/**
 	 * Parser hook callback
 	 *
@@ -248,12 +280,13 @@ class RandomImage {
 	 */
 	public static function renderHook( $input, $args, $parser ) {
 		global $wgRandomImageNoCache;
-		if( $wgRandomImageNoCache )
+		if ( $wgRandomImageNoCache ) {
 			$parser->disableCache();
+		}
 		$random = new RandomImage( $parser, $args, $input );
 		return $random->render();
 	}
-	
+
 	/**
 	 * Strip <randomcaption> tags out of page text
 	 *
@@ -265,5 +298,5 @@ class RandomImage {
 		$text = preg_replace( '!</?randomcaption>!i', '', $text );
 		return true;
 	}
-	
+
 }
