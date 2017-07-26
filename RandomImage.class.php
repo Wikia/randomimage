@@ -120,10 +120,11 @@ class RandomImage {
 		$dom = new DOMDocument();
 		$dom->loadHTML( $html );
 		$xpath = new DOMXPath( $dom );
-		foreach ( $xpath->query( '//div[@class="magnify"]' ) as $mag ) {
+		foreach ( $xpath->query( '//div[@class="thumbcaption"]' ) as $mag ) {
 			$mag->parentNode->removeChild( $mag );
 		}
-		return preg_replace( '!<\?xml[^?]*\?>!', '', $dom->saveXml() );
+
+		return $dom->saveHtml($dom->getElementsByTagName('div')->item(0));
 	}
 
 	/**
