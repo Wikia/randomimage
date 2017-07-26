@@ -123,7 +123,7 @@ class RandomImage {
 		foreach ( $xpath->query( '//div[@class="magnify"]' ) as $mag ) {
 			$mag->parentNode->removeChild( $mag );
 		}
-		return preg_replace( '!<\?xml[^?]*\?>!', '', $doc->saveXml() );
+		return preg_replace( '!<\?xml[^?]*\?>!', '', $dom->saveXml() );
 	}
 
 	/**
